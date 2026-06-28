@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.Uniconnect_iq" parent="Theme.AppCompat.DayNight.NoActionBar">
+        <item name="colorPrimary">#38BDF8</item>
+        <item name="colorPrimaryDark">#0B0F19</item>
+        <item name="colorAccent">#38BDF8</item>
+
+        <item name="android:windowBackground">#0B0F19</item>
+    </style>
+</resources>

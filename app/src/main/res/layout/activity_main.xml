@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#0B0F19"
+    android:padding="16dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="UniConnect IQ — Registro Completo"
+            android:textColor="#38BDF8"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginBottom="16dp"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="#111827"
+            android:orientation="vertical"
+            android:padding="16dp"
+            android:layout_marginBottom="16dp">
+
+            <EditText
+                android:id="@+id/etIdUsuario"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="ID Usuario (Numérico)"
+                android:inputType="number"
+                android:textColor="#F8FAFC"
+                android:textColorHint="#64748B"
+                android:layout_marginBottom="8dp"/>
+
+            <EditText
+                android:id="@+id/etNombreUsuario"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Nombre"
+                android:inputType="textPersonName"
+                android:textColor="#F8FAFC"
+                android:textColorHint="#64748B"
+                android:layout_marginBottom="8dp"/>
+
+            <EditText
+                android:id="@+id/etApellido"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Apellido"
+                android:inputType="textPersonName"
+                android:textColor="#F8FAFC"
+                android:textColorHint="#64748B"
+                android:layout_marginBottom="8dp"/>
+
+            <EditText
+                android:id="@+id/etCorreo"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Correo Electrónico"
+                android:inputType="textEmailAddress"
+                android:textColor="#F8FAFC"
+                android:textColorHint="#64748B"
+                android:layout_marginBottom="8dp"/>
+
+            <EditText
+                android:id="@+id/etPassword"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Contraseña (Login)"
+                android:inputType="textPassword"
+                android:textColor="#F8FAFC"
+                android:textColorHint="#64748B"
+                android:layout_marginBottom="8dp"/>
+
+            <EditText
+                android:id="@+id/etCarrera"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Carrera"
+                android:inputType="text"
+                android:textColor="#F8FAFC"
+                android:textColorHint="#64748B"
+                android:layout_marginBottom="8dp"/>
+
+            <EditText
+                android:id="@+id/etIdRol"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="ID Rol (Ej: 1)"
+                android:inputType="number"
+                android:textColor="#F8FAFC"
+                android:textColorHint="#64748B"
+                android:layout_marginBottom="8dp"/>
+
+            <EditText
+                android:id="@+id/etExtensionVoip"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Extensión SIP FreePBX"
+                android:inputType="phone"
+                android:textColor="#F8FAFC"
+                android:textColorHint="#64748B"
+                android:layout_marginBottom="16dp"/>
+
+            <Button
+                android:id="@+id/btnGuardar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="REGISTRAR NUEVO USUARIO"
+                android:backgroundTint="#38BDF8"
+                android:textColor="#0F172A"
+                android:textStyle="bold"/>
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/btnSincronizar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="SINCRONIZAR LISTA"
+            android:backgroundTint="#1E293B"
+            android:textColor="#94A3B8"
+            android:layout_marginBottom="12dp"/>
+
+        <TextView
+            android:id="@+id/tvTablaContenido"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Cargando usuarios..."
+            android:textColor="#E2E8F0"
+            android:fontFamily="monospace"
+            android:textSize="12sp"
+            android:background="#111827"
+            android:padding="12dp"/>
+    </LinearLayout>
+</ScrollView>
