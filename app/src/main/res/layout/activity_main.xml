@@ -3,6 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#0B0F19"
+    android:fillViewport="true"
     android:padding="16dp">
 
     <LinearLayout
@@ -13,30 +14,30 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="UniConnect IQ — Registro Completo"
+            android:text="UniConnect IQ — Registro"
             android:textColor="#38BDF8"
             android:textSize="22sp"
             android:textStyle="bold"
             android:layout_gravity="center_horizontal"
-            android:layout_marginBottom="16dp"/>
+            android:layout_marginBottom="24dp"/>
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="#111827"
             android:orientation="vertical"
-            android:padding="16dp"
-            android:layout_marginBottom="16dp">
+            android:padding="20dp"
+            android:elevation="4dp">
 
             <EditText
                 android:id="@+id/etIdUsuario"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="ID Usuario (Numérico)"
+                android:hint="ID Usuario"
                 android:inputType="number"
                 android:textColor="#F8FAFC"
                 android:textColorHint="#64748B"
-                android:layout_marginBottom="8dp"/>
+                android:layout_marginBottom="12dp"/>
 
             <EditText
                 android:id="@+id/etNombreUsuario"
@@ -46,7 +47,7 @@
                 android:inputType="textPersonName"
                 android:textColor="#F8FAFC"
                 android:textColorHint="#64748B"
-                android:layout_marginBottom="8dp"/>
+                android:layout_marginBottom="12dp"/>
 
             <EditText
                 android:id="@+id/etApellido"
@@ -56,7 +57,7 @@
                 android:inputType="textPersonName"
                 android:textColor="#F8FAFC"
                 android:textColorHint="#64748B"
-                android:layout_marginBottom="8dp"/>
+                android:layout_marginBottom="12dp"/>
 
             <EditText
                 android:id="@+id/etCorreo"
@@ -66,17 +67,17 @@
                 android:inputType="textEmailAddress"
                 android:textColor="#F8FAFC"
                 android:textColorHint="#64748B"
-                android:layout_marginBottom="8dp"/>
+                android:layout_marginBottom="12dp"/>
 
             <EditText
                 android:id="@+id/etPassword"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Contraseña (Login)"
+                android:hint="Contraseña"
                 android:inputType="textPassword"
                 android:textColor="#F8FAFC"
                 android:textColorHint="#64748B"
-                android:layout_marginBottom="8dp"/>
+                android:layout_marginBottom="12dp"/>
 
             <EditText
                 android:id="@+id/etCarrera"
@@ -86,17 +87,17 @@
                 android:inputType="text"
                 android:textColor="#F8FAFC"
                 android:textColorHint="#64748B"
-                android:layout_marginBottom="8dp"/>
+                android:layout_marginBottom="12dp"/>
 
             <EditText
                 android:id="@+id/etIdRol"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="ID Rol (Ej: 1)"
+                android:hint="ID Rol"
                 android:inputType="number"
                 android:textColor="#F8FAFC"
                 android:textColorHint="#64748B"
-                android:layout_marginBottom="8dp"/>
+                android:layout_marginBottom="12dp"/>
 
             <EditText
                 android:id="@+id/etExtensionVoip"
@@ -106,36 +107,34 @@
                 android:inputType="phone"
                 android:textColor="#F8FAFC"
                 android:textColorHint="#64748B"
-                android:layout_marginBottom="16dp"/>
+                android:layout_marginBottom="24dp"/>
 
             <Button
                 android:id="@+id/btnGuardar"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="REGISTRAR NUEVO USUARIO"
+                android:text="REGISTRAR USUARIO"
                 android:backgroundTint="#38BDF8"
                 android:textColor="#0F172A"
                 android:textStyle="bold"/>
+
+            <ProgressBar
+                android:id="@+id/progressBar"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="16dp"
+                android:visibility="gone"/>
+
+            <TextView
+                android:id="@+id/tvEstadoRegistro"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:gravity="center"
+                android:textColor="#94A3B8"
+                android:textSize="14sp"/>
+
         </LinearLayout>
-
-        <Button
-            android:id="@+id/btnSincronizar"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="SINCRONIZAR LISTA"
-            android:backgroundTint="#1E293B"
-            android:textColor="#94A3B8"
-            android:layout_marginBottom="12dp"/>
-
-        <TextView
-            android:id="@+id/tvTablaContenido"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Cargando usuarios..."
-            android:textColor="#E2E8F0"
-            android:fontFamily="monospace"
-            android:textSize="12sp"
-            android:background="#111827"
-            android:padding="12dp"/>
     </LinearLayout>
 </ScrollView>

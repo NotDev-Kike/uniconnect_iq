@@ -3,11 +3,13 @@ package com.example.uniconnect_iq
 import com.google.gson.annotations.SerializedName
 
 // 1. Estructura para leer o listar usuarios de la Base de Datos
+
 data class Usuario(
     @SerializedName("id_usuario") val idUsuario: Int,
     @SerializedName("nombre") val nombre: String,
     @SerializedName("apellido") val apellido: String,
     @SerializedName("correo") val correo: String,
+    @SerializedName("password_hash") val passwordHash: String, // Esta es la clave que usaremos para SIP
     @SerializedName("carrera") val carrera: String,
     @SerializedName("id_rol") val idRol: Int,
     @SerializedName("extension") val extension: String,

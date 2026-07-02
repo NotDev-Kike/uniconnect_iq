@@ -23,7 +23,7 @@ interface ApiService {
 
     companion object {
         // Asegúrate de cambiar esta IP si la de tu Máquina Virtual de Node.js llega a cambiar
-        private const val BASE_URL = "http://192.168.1.20:3000/"
+        private const val BASE_URL = "http://192.168.2.194:3000/"
 
         fun crear(): ApiService {
             return Retrofit.Builder()

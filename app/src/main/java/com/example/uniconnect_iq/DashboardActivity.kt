@@ -1,58 +1,97 @@
 package com.example.uniconnect_iq
 
-import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.widget.Button
-import android.widget.EditText
-import android.widget.TextView
-import android.widget.Toast
+import android.view.View
+import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
+import org.linphone.core.Call
+import org.linphone.core.RegistrationState
 
-class DashboardActivity : AppCompatActivity() {
+class DashboardActivity : AppCompatActivity(), SipManager.CallListener, SipManager.RegistrationListener {
+
+    private var currentCall: Call? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_dashboard)
 
-        // Recuperamos los datos del usuario real logueado desde la MV
-        val preferencias = getSharedPreferences("UniConnectPrefs", Context.MODE_PRIVATE)
-        val nombreUsuario = preferencias.getString("nombre_completo", "Usuario")
-        val extensionSip = preferencias.getString("extension_sip", "No asignada")
-        val idUsuario = preferencias.getInt("id_usuario", 0)
+        val sipManager = SipManager.getInstance(this)
+        sipManager.setCallListener(this)
+        sipManager.setRegistrationListener(this)
 
-        // Enlace de componentes visuales
-        val tvBienvenida = findViewById<TextView>(R.id.tvDashBienvenida)
-        val tvExtension = findViewById<TextView>(R.id.tvDashExtension)
-        val etDestinoVoip = findViewById<EditText>(R.id.etDestinoVoip)
-        val btnLlamar = findViewById<Button>(R.id.btnLlamarVoip)
-        val btnCerrarSesion = findViewById<Button>(R.id.btnCerrarSesion)
+        val prefs = getSharedPreferences("UserSession", MODE_PRIVATE)
+        val ext = prefs.getString("extension", "") ?: ""
+        val pass = prefs.getString("password", "") ?: ""
 
-        // Inyectar datos en la pantalla
-        tvBienvenida.text = "¡Hola, $nombreUsuario!"
-        tvExtension.text = "Extensión Activa: [$extensionSip] • ID: $idUsuario"
+        findViewById<TextView>(R.id.tvUserInfo).text = "Usuario Extensión: $ext"
 
-        // ACCIÓN DE INTEGRACIÓN: Llamada VoIP (FreePBX)
-        btnLlamar.setOnClickListener {
-            val numeroDestino = etDestinoVoip.text.toString().trim()
-            if (numeroDestino.isEmpty()) {
-                Toast.makeText(this, "Escribe el número de extensión a marcar", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
-
-            // Aquí se conectará el código Linphone/PJSIP del Compañero A contra su MV FreePBX
-            Toast.makeText(this, "Marcando desde SIP/$extensionSip hacia SIP/$numeroDestino...", Toast.LENGTH_LONG).show()
+        if (ext.isNotEmpty()) {
+            sipManager.registrarExtension(ext, pass, "192.168.1.27", "5060")
         }
 
-        // ACCIÓN: Limpiar sesión y regresar al Login
-        btnCerrarSesion.setOnClickListener {
-            val editor = preferencias.edit()
-            editor.clear()
-            editor.apply()
+        // Botón Llamar
+        findViewById<Button>(R.id.btnLlamarVoip).setOnClickListener {
+            val num = findViewById<EditText>(R.id.etDestinoVoip).text.toString()
+            if (num.isNotEmpty()) sipManager.llamar(num)
+        }
 
+        // BOTÓN CERRAR SESIÓN (Corregido)
+        findViewById<Button>(R.id.btnCerrarSesion).setOnClickListener {
+            prefs.edit().clear().apply()
             val intent = Intent(this, LoginActivity::class.java)
+            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
             startActivity(intent)
             finish()
+        }
+    }
+
+    override fun onRegistrationChanged(state: RegistrationState) {
+        runOnUiThread {
+            findViewById<TextView>(R.id.tvDashExtension).text = "Estado: $state"
+        }
+    }
+
+    override fun onCallStateChanged(call: Call, state: Call.State) {
+        runOnUiThread {
+            currentCall = call
+            when (state) {
+                Call.State.IncomingReceived, Call.State.IncomingEarlyMedia -> mostrarInterfaz(true, true)
+                Call.State.OutgoingInit, Call.State.OutgoingProgress, Call.State.Connected -> mostrarInterfaz(true, false)
+                Call.State.End, Call.State.Released, Call.State.Error -> {
+                    currentCall = null
+                    mostrarInterfaz(false, false)
+                }
+                else -> {}
+            }
+        }
+    }
+
+    private fun mostrarInterfaz(visible: Boolean, esEntrante: Boolean) {
+        val layout = findViewById<LinearLayout>(R.id.layoutLlamadaActiva)
+        val btnContestar = findViewById<Button>(R.id.btnContestar)
+
+        layout.post {
+            layout.visibility = if (visible) View.VISIBLE else View.GONE
+            if (visible) layout.bringToFront()
+        }
+
+        btnContestar.visibility = if (esEntrante) View.VISIBLE else View.GONE
+
+        // Usamos setOnClickListener asegurando limpiar acciones previas
+        btnContestar.setOnClickListener {
+            currentCall?.accept()
+            btnContestar.visibility = View.GONE
+        }
+
+        findViewById<Button>(R.id.btnColgar).setOnClickListener {
+            currentCall?.terminate()
+            mostrarInterfaz(false, false)
+        }
+
+        findViewById<Button>(R.id.btnAltavoz).setOnClickListener {
+            SipManager.getInstance(this).setAltavoz(true)
+            Toast.makeText(this, "Altavoz activado", Toast.LENGTH_SHORT).show()
         }
     }
 }

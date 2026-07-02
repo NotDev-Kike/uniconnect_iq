@@ -19,6 +19,9 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
+
+        // 🟢 Reemplaza la URL anterior por esta ruta de descarga directa
+        maven { url = uri("https://download.linphone.org/releases/maven_repository") }
     }
 }
 

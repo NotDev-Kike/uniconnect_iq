@@ -3,33 +3,21 @@ package com.example.uniconnect_iq
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
-import android.widget.Button
-import android.widget.EditText
-import android.widget.TextView
-import android.widget.Toast
+import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.*
 
 class LoginActivity : AppCompatActivity() {
-
     private val apiService = ApiService.crear()
-    private val TAG = "UNICONNECT_LOG"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // SESIÓN PERSISTENTE: Si ya hay un usuario en SharedPreferences, salta directo
-        val preferencias = getSharedPreferences("UniConnectPrefs", Context.MODE_PRIVATE)
-        if (preferencias.contains("id_usuario")) {
-            conectarEcosistemasMapeados(
-                preferencias.getInt("id_usuario", 0),
-                preferencias.getString("extension_sip", "") ?: ""
-            )
-            irAFormularioRegistros()
+        // 1. VERIFICACIÓN DE SESIÓN: Si ya existe, saltar al Dashboard
+        val prefs = getSharedPreferences("UserSession", Context.MODE_PRIVATE)
+        if (prefs.contains("extension")) {
+            startActivity(Intent(this, DashboardActivity::class.java))
+            finish()
             return
         }
 
@@ -38,85 +26,55 @@ class LoginActivity : AppCompatActivity() {
         val etCorreo = findViewById<EditText>(R.id.etLoginCorreo)
         val etPassword = findViewById<EditText>(R.id.etLoginPassword)
         val btnIngresar = findViewById<Button>(R.id.btnLoginIngresar)
-        val tvIrARegistro = findViewById<TextView>(R.id.tvIrARegistro)
+        val tvIrARegistro = findViewById<TextView>(R.id.tvIrARegistro) // Asegúrate de tener este ID en tu XML
 
+        // 2. NAVEGACIÓN AL REGISTRO
         tvIrARegistro.setOnClickListener {
-            val intent = Intent(this, MainActivity::class.java)
-            startActivity(intent)
+            startActivity(Intent(this, MainActivity::class.java))
         }
 
+        // 3. LÓGICA DE LOGIN
         btnIngresar.setOnClickListener {
-            val correoTxt = etCorreo.text.toString().trim()
-            val passTxt = etPassword.text.toString().trim()
+            val correo = etCorreo.text.toString().trim()
+            val pass = etPassword.text.toString().trim()
 
-            if (correoTxt.isEmpty() || passTxt.isEmpty()) {
-                Toast.makeText(this, "Por favor, ingresa tus credenciales", Toast.LENGTH_SHORT).show()
+            if (correo.isEmpty() || pass.isEmpty()) {
+                Toast.makeText(this, "Completa todos los campos", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
-            Toast.makeText(this, "Verificando credenciales con la MV...", Toast.LENGTH_SHORT).show()
-
-            // 🌐 CONSULTA DINÁMICA A LA BASE DE DATOS DE LA MV
             CoroutineScope(Dispatchers.IO).launch {
                 try {
-                    // Llamamos al endpoint GET /api/usuarios de tu Node.js para traer la BD real
                     val respuesta = apiService.obtenerUsuarios()
-
                     withContext(Dispatchers.Main) {
-                        if (respuesta.isSuccessful && respuesta.body() != null) {
-                            val listaUsuariosBD = respuesta.body()!!
-
-                            // Buscamos dinámicamente si existe un usuario con ese correo
-                            // NOTA: Como en la base de datos la columna se llama 'password_hash',
-                            // comparamos el campo 'estado' o el que use tu backend para la clave si no viene mapeado,
-                            // pero asumiremos que el campo de contraseña se lee temporalmente desde el flujo.
-                            // Dado que el GET no suele mandar el password_hash por seguridad, si tu API lo incluye, lo validamos directamente:
-
-                            val usuarioEncontrado = listaUsuariosBD.find { u ->
-                                u.correo.equals(correoTxt, ignoreCase = true)
+                        if (respuesta.isSuccessful) {
+                            val usuario = respuesta.body()?.find {
+                                it.correo.equals(correo, true) && it.passwordHash == pass
                             }
 
-                            if (usuarioEncontrado != null) {
-                                // 💡 ACLARACIÓN: Si tu API Node.js oculta la contraseña en el GET por seguridad,
-                                // dejamos pasar el login simulando la comprobación exitosa del correo encontrado en MariaDB.
-                                // Si tu API sí devuelve la contraseña en el JSON, puedes descomentar la siguiente validación.
+                            if (usuario != null) {
+                                // GUARDAR SESIÓN
+                                prefs.edit().apply {
+                                    putString("extension", usuario.extension)
+                                    putString("password", usuario.passwordHash)
+                                    apply()
+                                }
 
-                                val editor = preferencias.edit()
-                                editor.putInt("id_usuario", usuarioEncontrado.idUsuario)
-                                editor.putString("nombre_completo", "${usuarioEncontrado.nombre} ${usuarioEncontrado.apellido}")
-                                editor.putString("extension_sip", usuarioEncontrado.extension)
-                                editor.apply()
-
-                                Toast.makeText(this@LoginActivity, "¡Acceso concedido para ${usuarioEncontrado.nombre}!", Toast.LENGTH_SHORT).show()
-                                conectarEcosistemasMapeados(usuarioEncontrado.idUsuario, usuarioEncontrado.extension)
-                                irAFormularioRegistros()
+                                startActivity(Intent(this@LoginActivity, DashboardActivity::class.java))
+                                finish()
                             } else {
-                                Toast.makeText(this@LoginActivity, "Error: El usuario no existe en MariaDB", Toast.LENGTH_LONG).show()
+                                Toast.makeText(this@LoginActivity, "Credenciales incorrectas", Toast.LENGTH_SHORT).show()
                             }
                         } else {
-                            Log.e(TAG, "Error de Servidor: Código ${respuesta.code()}")
-                            Toast.makeText(this@LoginActivity, "Error al conectar con la base de la MV (Code: ${respuesta.code()})", Toast.LENGTH_LONG).show()
+                            Toast.makeText(this@LoginActivity, "Error de servidor: ${respuesta.code()}", Toast.LENGTH_SHORT).show()
                         }
                     }
                 } catch (e: Exception) {
                     withContext(Dispatchers.Main) {
-                        Log.e(TAG, "Fallo de red: ${e.message}")
-                        Toast.makeText(this@LoginActivity, "Fallo de red al conectar con la MV: ${e.message}", Toast.LENGTH_LONG).show()
+                        Toast.makeText(this@LoginActivity, "Error de red: ${e.message}", Toast.LENGTH_SHORT).show()
                     }
                 }
             }
         }
-    }
-
-    private fun irAFormularioRegistros() {
-        // Cambiamos MainActivity por DashboardActivity
-        val intent = Intent(this, DashboardActivity::class.java)
-        startActivity(intent)
-        finish()
-    }
-
-    private fun conectarEcosistemasMapeados(idUsuario: Int, extensionSip: String) {
-        println("VoIP FreePBX: Cargando extensión $extensionSip")
-        println("Mapas: Rastreo activado para usuario $idUsuario")
     }
 }

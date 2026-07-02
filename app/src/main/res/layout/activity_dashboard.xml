@@ -1,113 +1,86 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#0B0F19"
-    android:orientation="vertical"
-    android:padding="16dp">
+    android:background="#0B0F19">
 
-    <TextView
-        android:id="@+id/tvDashBienvenida"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Bienvenido, Usuario"
-        android:textColor="#38BDF8"
-        android:textSize="24sp"
-        android:textStyle="bold" />
-
-    <TextView
-        android:id="@+id/tvDashExtension"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Extensión SIP: Cargando..."
-        android:textColor="#94A3B8"
-        android:textSize="14sp"
-        android:layout_marginBottom="20dp" />
-
-    <View
+    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:background="#1E293B"
-        android:layout_marginBottom="20dp"/>
+        android:layout_height="match_parent"
+        android:fillViewport="true">
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="#111827"
-        android:orientation="vertical"
-        android:padding="16dp"
-        android:layout_marginBottom="16dp">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="📞 Central Telefónica VoIP"
-            android:textColor="#F8FAFC"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:layout_marginBottom="8dp"/>
-
-        <EditText
-            android:id="@+id/etDestinoVoip"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Número de Extensión (Ej. 1002)"
-            android:inputType="number"
-            android:textColor="#F8FAFC"
-            android:textColorHint="#64748B"/>
-
-        <Button
-            android:id="@+id/btnLlamarVoip"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="INICIAR LLAMADA SIP"
-            android:backgroundTint="#10B981"
-            android:textColor="#F8FAFC"
-            android:textStyle="bold"
-            android:layout_marginTop="8dp"/>
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:background="#111827"
-        android:orientation="vertical"
-        android:padding="16dp">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="📍 Mapa de Usuarios Conectados"
-            android:textColor="#F8FAFC"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:layout_marginBottom="8dp"/>
-
-        <FrameLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:background="#1F2937">
+            android:orientation="vertical"
+            android:padding="20dp">
 
             <TextView
-                android:id="@+id/tvStatusMapa"
-                android:layout_width="wrap_content"
+                android:id="@+id/tvUserInfo"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Visualizador de Mapa Listo\n(Cargando nodos de calor desde MV...)"
+                android:text="Usuario: Cargando..."
+                android:textColor="#38BDF8"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="5dp"/>
+
+            <TextView
+                android:id="@+id/tvDashExtension"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Estado: Verificando registro..."
                 android:textColor="#94A3B8"
-                android:gravity="center"
-                android:layout_gravity="center"/>
-        </FrameLayout>
+                android:textSize="14sp"
+                android:layout_marginBottom="20dp"/>
+
+            <EditText
+                android:id="@+id/etDestinoVoip"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Número de Extensión"
+                android:inputType="number"
+                android:textColor="#FFFFFF"
+                android:textColorHint="#64748B"/>
+
+            <Button
+                android:id="@+id/btnLlamarVoip"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="INICIAR LLAMADA"
+                android:backgroundTint="#10B981"
+                android:layout_marginBottom="16dp"/>
+
+            <Button
+                android:id="@+id/btnCerrarSesion"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="CERRAR SESIÓN"
+                android:backgroundTint="#EF4444"/>
+
+        </LinearLayout>
+    </ScrollView>
+
+    <LinearLayout
+        android:id="@+id/layoutLlamadaActiva"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone"
+        android:background="#0B0F19"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:padding="24dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Llamada en curso"
+            android:textColor="#FFFFFF"
+            android:textSize="22sp"
+            android:layout_marginBottom="30dp"/>
+
+        <Button android:id="@+id/btnContestar" android:layout_width="250dp" android:layout_height="wrap_content" android:text="CONTESTAR" android:visibility="gone" android:backgroundTint="#10B981"/>
+        <Button android:id="@+id/btnAltavoz" android:layout_width="250dp" android:layout_height="wrap_content" android:text="ALTAVOZ" android:backgroundTint="#64748B"/>
+        <Button android:id="@+id/btnColgar" android:layout_width="250dp" android:layout_height="wrap_content" android:text="COLGAR" android:backgroundTint="#EF4444"/>
     </LinearLayout>
-
-    <Button
-        android:id="@+id/btnCerrarSesion"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Cerrar Sesión"
-        android:backgroundTint="#EF4444"
-        android:layout_gravity="center_horizontal"
-        android:layout_marginTop="12dp"
-        android:textSize="12sp"/>
-
-</LinearLayout>
+</RelativeLayout>
