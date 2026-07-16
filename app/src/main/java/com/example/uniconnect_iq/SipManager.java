@@ -2,8 +2,9 @@ package com.example.uniconnect_iq;
 
 import org.linphone.core.*;
 import android.content.Context;
-import android.os.PowerManager;
 import android.util.Log;
+import android.os.Handler;
+import android.os.Looper;
 
 public class SipManager {
     private static final String TAG = "SipManager";
@@ -11,11 +12,12 @@ public class SipManager {
     private static SipManager instance;
     private CallListener callListener;
     private RegistrationListener regListener;
-    private PowerManager.WakeLock wakeLock;
-    private Context context;
+    private final Context context;
+    // Usamos el Handler del hilo principal para garantizar actualizaciones de UI seguras
+    private final Handler mainHandler = new Handler(Looper.getMainLooper());
 
     public interface CallListener { void onCallStateChanged(Call call, Call.State state); }
-    public interface RegistrationListener { void onRegistrationChanged(RegistrationState state); }
+    public interface RegistrationListener { void onRegistrationChanged(RegistrationState state, String message); }
 
     public void setCallListener(CallListener l) { this.callListener = l; }
     public void setRegistrationListener(RegistrationListener l) { this.regListener = l; }
@@ -27,22 +29,29 @@ public class SipManager {
         core.addListener(new CoreListenerStub() {
             @Override
             public void onCallStateChanged(Core core, Call call, Call.State state, String message) {
-                gestionarProximidad(state);
-                if (callListener != null) callListener.onCallStateChanged(call, state);
+                // Postear al hilo principal
+                if (callListener != null) {
+                    mainHandler.post(() -> callListener.onCallStateChanged(call, state));
+                }
             }
 
             @Override
             public void onAccountRegistrationStateChanged(Core core, Account account, RegistrationState state, String message) {
-                Log.d(TAG, "ESTADO REGISTRO: " + state);
-                if (regListener != null) regListener.onRegistrationChanged(state);
+                Log.d(TAG, "ESTADO REGISTRO: " + state + " | MENSAJE: " + message);
+                // Postear al hilo principal para actualizar el TextView sin errores
+                if (regListener != null) {
+                    mainHandler.post(() -> regListener.onRegistrationChanged(state, message));
+                }
             }
         });
 
         core.start();
+
+        // Bucle eficiente para procesar eventos
         new Thread(() -> {
-            while (true) {
+            while (core != null) {
                 synchronized (core) { core.iterate(); }
-                try { Thread.sleep(20); } catch (Exception e) { break; }
+                try { Thread.sleep(20); } catch (InterruptedException e) { break; }
             }
         }).start();
     }
@@ -54,48 +63,47 @@ public class SipManager {
 
     public void registrarExtension(String ext, String pass, String ip, String port) {
         synchronized (core) {
-            core.clearAllAuthInfo(); core.clearAccounts();
-            AuthInfo authInfo = Factory.instance().createAuthInfo(ext, null, pass, null, null, ip);
+            core.clearAllAuthInfo();
+            core.clearAccounts();
+
+            AuthInfo authInfo = Factory.instance().createAuthInfo(ext, null, pass, null, "asterisk", ip);
             core.addAuthInfo(authInfo);
+
             AccountParams params = core.createAccountParams();
             params.setIdentityAddress(Factory.instance().createAddress("sip:" + ext + "@" + ip));
-            params.setServerAddress(Factory.instance().createAddress("sip:" + ip + ":" + port + ";transport=udp"));
-            params.setExpires(60);
+            params.setServerAddress(Factory.instance().createAddress("sip:" + ip + ":" + port));
             params.setRegisterEnabled(true);
+            params.setTransport(TransportType.Udp);
+
             Account account = core.createAccount(params);
             core.addAccount(account);
             core.setDefaultAccount(account);
         }
     }
 
-    // ESTE ES EL MÉTODO QUE FALTABA
-    public void setAltavoz(boolean active) {
+    public void llamar(String destino) {
+        llamar(destino, "192.168.10.2");
+    }
+
+    public void llamar(String destino, String ipServidor) {
         synchronized (core) {
-            AudioDevice[] devices = core.getAudioDevices();
-            for (AudioDevice device : devices) {
-                if (active && device.getType() == AudioDevice.Type.Speaker) {
-                    core.setOutputAudioDevice(device);
-                } else if (!active && device.getType() == AudioDevice.Type.Earpiece) {
-                    core.setOutputAudioDevice(device);
-                }
+            if (core.getDefaultAccount() != null) {
+                CallParams callParams = core.createCallParams(null);
+                core.inviteAddressWithParams(Factory.instance().createAddress("sip:" + destino + "@" + ipServidor), callParams);
             }
         }
     }
 
-    private void gestionarProximidad(Call.State state) {
-        PowerManager pm = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
-        if (state == Call.State.Connected) {
-            wakeLock = pm.newWakeLock(PowerManager.PROXIMITY_SCREEN_OFF_WAKE_LOCK, "SipManager:Proximity");
-            wakeLock.acquire(10*60*1000L);
-        } else if (state == Call.State.End || state == Call.State.Released) {
-            if (wakeLock != null && wakeLock.isHeld()) wakeLock.release();
-        }
-    }
-
-    public void llamar(String destino) {
+    public void setAltavoz(boolean active) {
         synchronized (core) {
-            if (core.getDefaultAccount() != null) {
-                core.inviteAddress(Factory.instance().createAddress("sip:" + destino + "@" + core.getDefaultAccount().getParams().getServerAddress().getDomain()));
+            for (AudioDevice device : core.getAudioDevices()) {
+                if (active && device.getType() == AudioDevice.Type.Speaker) {
+                    core.setOutputAudioDevice(device);
+                    break;
+                } else if (!active && device.getType() == AudioDevice.Type.Earpiece) {
+                    core.setOutputAudioDevice(device);
+                    break;
+                }
             }
         }
     }

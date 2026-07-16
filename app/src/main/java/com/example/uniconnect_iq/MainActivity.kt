@@ -53,6 +53,7 @@ class MainActivity : AppCompatActivity() {
                 apellido = apeTxt,
                 correo = corrTxt,
                 passwordHash = passTxt,
+                passwordSip = passTxt,
                 carrera = carTxt,
                 idRol = rolTxt.toInt(),
                 extension = extTxt,

@@ -2,41 +2,54 @@ package com.example.uniconnect_iq
 
 import android.content.Intent
 import android.os.Bundle
+import android.provider.Settings
+import android.util.Log
 import android.view.View
+import android.webkit.WebView
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import org.linphone.core.Call
 import org.linphone.core.RegistrationState
 
 class DashboardActivity : AppCompatActivity(), SipManager.CallListener, SipManager.RegistrationListener {
 
     private var currentCall: Call? = null
+    private lateinit var layoutLlamadaActiva: LinearLayout
+    private lateinit var tvDashExtension: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_dashboard)
 
+        // 1. Inicializar Vistas
+        val tvUserInfo = findViewById<TextView>(R.id.tvUserInfo)
+        tvDashExtension = findViewById(R.id.tvDashExtension)
+        layoutLlamadaActiva = findViewById(R.id.layoutLlamadaActiva)
+
+        // 2. Cargar datos de sesión
+        val prefs = getSharedPreferences("UserSession", MODE_PRIVATE)
+        val nombre = prefs.getString("nombre", "Usuario") ?: "Usuario"
+        val email = prefs.getString("email", "Sin correo") ?: "Sin correo"
+        val ext = prefs.getString("extension", "000") ?: "000"
+
+        tvUserInfo.text = nombre
+        tvDashExtension.text = "Ext: $ext | $email | Estado: Conectando..."
+
+        // 3. Inicializar SIP
         val sipManager = SipManager.getInstance(this)
         sipManager.setCallListener(this)
         sipManager.setRegistrationListener(this)
 
-        val prefs = getSharedPreferences("UserSession", MODE_PRIVATE)
-        val ext = prefs.getString("extension", "") ?: ""
-        val pass = prefs.getString("password", "") ?: ""
-
-        findViewById<TextView>(R.id.tvUserInfo).text = "Usuario Extensión: $ext"
-
-        if (ext.isNotEmpty()) {
-            sipManager.registrarExtension(ext, pass, "192.168.1.27", "5060")
+        if (ext != "000") {
+            sipManager.registrarExtension(ext, prefs.getString("password", ""), "192.168.10.2", "5060")
         }
 
-        // Botón Llamar
-        findViewById<Button>(R.id.btnLlamarVoip).setOnClickListener {
-            val num = findViewById<EditText>(R.id.etDestinoVoip).text.toString()
-            if (num.isNotEmpty()) sipManager.llamar(num)
-        }
+        // 4. Inicializar Radar pasando los datos que el servidor espera
+        inicializarRadar(nombre, ext)
 
-        // BOTÓN CERRAR SESIÓN (Corregido)
         findViewById<Button>(R.id.btnCerrarSesion).setOnClickListener {
             prefs.edit().clear().apply()
             val intent = Intent(this, LoginActivity::class.java)
@@ -46,52 +59,48 @@ class DashboardActivity : AppCompatActivity(), SipManager.CallListener, SipManag
         }
     }
 
-    override fun onRegistrationChanged(state: RegistrationState) {
-        runOnUiThread {
-            findViewById<TextView>(R.id.tvDashExtension).text = "Estado: $state"
+    override fun onRegistrationChanged(state: RegistrationState, message: String?) {
+        val statusText = when (state) {
+            RegistrationState.Ok -> "OK"
+            RegistrationState.Progress -> "En proceso..."
+            RegistrationState.Failed -> "Fallido"
+            RegistrationState.Cleared -> "Desconectado"
+            else -> state.toString()
+        }
+
+        val prefs = getSharedPreferences("UserSession", MODE_PRIVATE)
+        val ext = prefs.getString("extension", "000")
+        val email = prefs.getString("email", "Sin correo")
+
+        tvDashExtension.text = "Ext: $ext | $email | Estado: $statusText"
+    }
+
+    private fun inicializarRadar(nombre: String, ext: String) {
+        val webView = findViewById<WebView>(R.id.webViewRadar)
+        webView.settings.javaScriptEnabled = true
+        webView.loadUrl("http://192.168.10.4:5000/")
+
+        // El servidor Flask espera un campo llamado 'mac'.
+        // Usamos el androidId como identificador único para el servidor.
+        val androidId = Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID)
+        val nombreCompleto = "$nombre (Ext: $ext)"
+
+        // Enviamos el objeto con las llaves 'mac' y 'nombreCompleto' que espera tu servidor Python
+        val request = VinculacionRequest(androidId, nombreCompleto)
+
+        lifecycleScope.launch(Dispatchers.IO) {
+            try {
+                ApiService.crearParaRadar().vincularUsuario(request)
+            } catch (e: Exception) {
+                Log.e("RADAR_SYNC", "Error al vincular: ${e.message}")
+            }
         }
     }
 
     override fun onCallStateChanged(call: Call, state: Call.State) {
         runOnUiThread {
             currentCall = call
-            when (state) {
-                Call.State.IncomingReceived, Call.State.IncomingEarlyMedia -> mostrarInterfaz(true, true)
-                Call.State.OutgoingInit, Call.State.OutgoingProgress, Call.State.Connected -> mostrarInterfaz(true, false)
-                Call.State.End, Call.State.Released, Call.State.Error -> {
-                    currentCall = null
-                    mostrarInterfaz(false, false)
-                }
-                else -> {}
-            }
-        }
-    }
-
-    private fun mostrarInterfaz(visible: Boolean, esEntrante: Boolean) {
-        val layout = findViewById<LinearLayout>(R.id.layoutLlamadaActiva)
-        val btnContestar = findViewById<Button>(R.id.btnContestar)
-
-        layout.post {
-            layout.visibility = if (visible) View.VISIBLE else View.GONE
-            if (visible) layout.bringToFront()
-        }
-
-        btnContestar.visibility = if (esEntrante) View.VISIBLE else View.GONE
-
-        // Usamos setOnClickListener asegurando limpiar acciones previas
-        btnContestar.setOnClickListener {
-            currentCall?.accept()
-            btnContestar.visibility = View.GONE
-        }
-
-        findViewById<Button>(R.id.btnColgar).setOnClickListener {
-            currentCall?.terminate()
-            mostrarInterfaz(false, false)
-        }
-
-        findViewById<Button>(R.id.btnAltavoz).setOnClickListener {
-            SipManager.getInstance(this).setAltavoz(true)
-            Toast.makeText(this, "Altavoz activado", Toast.LENGTH_SHORT).show()
+            layoutLlamadaActiva.visibility = if (state == Call.State.IncomingReceived || state == Call.State.Connected) View.VISIBLE else View.GONE
         }
     }
 }
