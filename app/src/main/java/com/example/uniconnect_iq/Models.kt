@@ -2,7 +2,8 @@ package com.example.uniconnect_iq
 
 import com.google.gson.annotations.SerializedName
 
-// 1. Estructura para leer o listar usuarios
+// ==================== USUARIOS ====================
+
 data class Usuario(
     @SerializedName("id_usuario") val idUsuario: Int,
     @SerializedName("nombre") val nombre: String,
@@ -15,7 +16,6 @@ data class Usuario(
     @SerializedName("estado") val estado: String
 )
 
-// 2. Estructura para registrar un usuario
 data class UsuarioRequest(
     @SerializedName("id_usuario") val idUsuario: Int,
     @SerializedName("nombre") val nombre: String,
@@ -29,21 +29,33 @@ data class UsuarioRequest(
     @SerializedName("estado") val estado: String
 )
 
-// 3. Estructura para el Login
 data class LoginRequest(
     @SerializedName("correo") val correo: String,
     @SerializedName("password_hash") val passwordHash: String,
     @SerializedName("password") val password: String
 )
 
-// 4. Estructura para llamadas IA
+// ==================== VOIP / IA ====================
+
 data class LlamadaRequest(
     @SerializedName("nombreDestino") val nombreDestino: String,
     @SerializedName("extensionOrigen") val extensionOrigen: String
 )
 
-// 5. CORREGIDO: Estructura exacta para tu servidor Flask
+// ==================== RADAR ====================
 data class VinculacionRequest(
-    @SerializedName("mac") val mac: String, // El servidor espera 'mac'
-    @SerializedName("nombreCompleto") val nombreCompleto: String // El servidor espera 'nombreCompleto'
+
+    @SerializedName("extension")
+    val extension:String,
+
+    @SerializedName("nombre")
+    val nombre:String,
+
+    @SerializedName("dispositivo")
+    val dispositivo:String? = null,
+
+
+    @SerializedName("token")
+    val token:String? = null
+
 )
